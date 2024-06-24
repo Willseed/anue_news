@@ -1,11 +1,25 @@
 import html
-import json
 import os
+import pymongo
 import re
 import requests
 
 from datetime import datetime
 
+def save_to_mongodb(data: dict) -> None:
+    """
+    Save data to MongoDB.
+
+    Args:
+        data (dict): The data to be saved.
+
+    Returns:
+        None
+    """
+    myclient = pymongo.MongoClient("mongodb://root:example@localhost:27017/")
+    mydb = myclient["mydatabase"]
+    mycol = mydb["customers"]
+    mycol.insert_one(data)
 
 def get_newslist_info(page: int = 1 , limit: int = 30) -> list | None:
     """
@@ -64,6 +78,4 @@ if __name__ == '__main__':
             'content': clean_news_content(news['content']),
             'keyword': news['keyword'],
         }
-        news_json = json.dumps(news_dict, ensure_ascii=False)
-        print(news_json)
-        break
+        save_to_mongodb(news_dict)
