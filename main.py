@@ -21,7 +21,7 @@ def save_to_mongodb(data: dict) -> None:
     mycol = mydb["customers"]
     mycol.insert_one(data)
 
-def get_newslist_info(page: int = 1 , limit: int = 30) -> list | None:
+def get_newslist_info(page: int = 1 , limit: int = 30, start_date: str = '2024-01-01', end_date: str = '2024-01-01') -> list | None:
     """
     Retrieves a list of news information from the Cnyes API.
 
@@ -33,7 +33,11 @@ def get_newslist_info(page: int = 1 , limit: int = 30) -> list | None:
         list | None: A list of news information if the request is successful, otherwise None.
 
     """
-    r = requests.get(f"https://api.cnyes.com/media/api/v1/newslist/category/tw_stock_news?page={page}&limit={limit}")
+    start_date = datetime2unix(f"{start_date} 00:00:00")
+    end_date = datetime2unix(f"{end_date} 23:59:59")
+    url = f"https://api.cnyes.com/media/api/v1/newslist/category/tw_stock_news?page={page}&limit={limit}&startAt={start_date}&endAt={end_date}"
+    print(url)
+    r = requests.get(url)
     if r.status_code != requests.codes.ok:
         print('requeste failed', r.status_code)
         return None
@@ -54,6 +58,18 @@ def clean_news_content(text: str) -> str:
     content = html.unescape(text)
     content = re.sub(r'<[^>]+>', '', content)
     return content
+
+def datetime2unix(datetime_str: str) -> int:
+    """
+    Converts a formatted datetime string to a Unix timestamp.
+
+    Args:
+        datetime_str (str): The formatted datetime string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+    Returns:
+        float: The Unix timestamp.
+    """
+    return int(datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S').timestamp())
 
 def unix2datetime(unix_time: float) -> str:
     """
